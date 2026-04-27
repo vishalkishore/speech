@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__
+dataset/
+data/train/
+data/test/
+data/valid/
+data/eval_dns/
+exp/
+*.log
+dns/
+results/
+dns_challenge_2/
+.vscode/
+dns_testset/

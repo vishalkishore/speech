@@ -2,29 +2,42 @@
 This is the official implementation of the SEMamba paper.  
 For more details, please refer to: [An Investigation of Incorporating Mamba for Speech Enhancement](https://arxiv.org/abs/2405.06573)
 
-## Local Updates In This Workspace
+## CauReg-SEMamba: 
 
-- Current engineering changes in this workspace include:
-  - latent regularization on the SEMamba embedding path,
-  - U-Net-style encoder to decoder skip connections,
-  - a latent predictor used as an embedding regularizer rather than as a standalone decoder,
-  - true causal normalization for streaming operation.
-- The original paper/repo used instance normalization in the enhancement stack. In this workspace, that path has been re-engineered into a true causal normalization scheme built around stateful causal magnitude normalization for train/stream consistency.
-- Reported streaming latency target in this workspace is about `48-55 ms`.
-- Packaged a standalone checkpoint bundle at [release/best_test_110000](release/best_test_110000) with:
-  - `g_00110000.pth`
-  - `do_00110000.pth`
-  - matching `config.yaml`
-  - `eval_best_test_110000.sh`
-- Archived local evaluation outputs are stored in [results/archive](results/archive), including:
-  - [results/archive/eval_73000_voicebank_summary.txt](results/archive/eval_73000_voicebank_summary.txt)
-    VoiceBank summary with `PESQ WB 3.1410`, `STOI 0.9484`, `OVRL MOS 3.1397`.
-  - [results/archive/dnsmos_96000_summary.txt](results/archive/dnsmos_96000_summary.txt)
-    evaluation summary with `PESQ WB 3.2250`, `OVRL MOS 3.1657`, `P808 MOS 3.5018`.
-  - [results/archive/dns_chunked_metrics_110000_10_summary.txt](results/archive/dns_chunked_metrics_110000_10_summary.txt)
-    chunked DNS summary for the `110000` checkpoint subset.
+This workspace extends SEMamba into **CauReg-SEMamba**, a fully causal SEMamba-based speech enhancement system for low-latency magnitude-phase enhancement.
 
-These notes describe committed local additions and archived results on top of the upstream SEMamba repository.
+The current research direction is to position the final system as a causal-domain SOTA result on VoiceBank+DEMAND. DNS-style evaluation is included as an out-of-domain generalization probe, not as the central benchmark claim.
+
+### Main Engineering Changes
+
+- Causal per-bin magnitude normalization for train/stream consistency.
+- Causal temporal-frequency Mamba processing.
+- U-Net-style encoder-to-decoder skip fusion.
+- Decoder-specific fusion for magnitude and phase reconstruction.
+- Latent Gaussian regularization on the post-Mamba representation.
+- Causal future-latent prediction used as an auxiliary regularizer.
+- Real-time oriented evaluation, with RTF reporting and an estimated streaming latency of roughly `26-30 ms` from the causal 400-sample analysis window at 16 kHz plus runtime overhead.
+
+The original SEMamba implementation used instance-style normalization in the enhancement stack. In this workspace, that path has been re-engineered into a true causal normalization scheme suitable for streaming inference.
+
+### Final System Results
+
+On the full VoiceBank+DEMAND test set, the final causal system reports:
+
+| Metric | Value |
+|---|---:|
+| PESQ | `3.1725` |
+| STOI | `0.9493` |
+| DNSMOS OVRL | `3.1267` |
+| DNSMOS SIG | `3.4420` |
+| DNSMOS BAK | `3.9727` |
+| P808 MOS | `3.4780` |
+| RTF | `0.0351` |
+| PCS PESQ | `~3.40` |
+
+The DNS result is reported on a 50-file chunked subset. The model was not trained on DNS, so this result should be interpreted as out-of-domain behavior.
+
+A detailed report of the method, comparisons, and findings is available in [CauReg-SEMamba-report.pdf](CauReg-SEMamba-report.pdf).
 
 ---
 
